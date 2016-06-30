@@ -160,7 +160,7 @@ var libCreeps = {
 				var nonFullExtension;
 				for (var e in creep.room.memory.extensions) {
 					var ext = Game.getObjectById(creep.room.memory.extensions[e].id);
-					if (ext.energy < e.energyCapacity) {
+					if (ext.energy < ext.energyCapacity) {
 						nonFullExtension = ext;
 						break;
 					}

@@ -116,7 +116,7 @@ var libCreeps = {
 					creep.moveTo(destination);
 			}
 			else {
-				destination = creep.pos.findClosestByPath(FIND_SOURCES);
+				destination = creep.pos.findClosestByRange(FIND_SOURCES);
 				if (!creep.pos.inRangeTo(destination, 2))
 					creep.moveTo(destination);
 			}

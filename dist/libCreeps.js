@@ -6,14 +6,14 @@ var libCreeps = {
 				delete Memory.creeps[name];
 			}
 		}
-		
+
 		Memory.creeps.expected = {
 			'harvester': 3,
 			'carrier': 2,
 			'upgrader': 2,
 			'builder': 2
 		};
-		
+
 		if (!Memory.creeps.current)
 			Memory.creeps.current = {};
 		for (var r in Memory.creeps.expected)
@@ -21,7 +21,7 @@ var libCreeps = {
 		var creeps = _.filter(Game.creeps, (c) => c.room == spawn.room);
 		for (var c in creeps)
 			Memory.creeps.current[creeps[c].memory.role]++;
-		
+
 		if (!spawn.room.memory.sources) {
 			spawn.room.memory.sources = {};
 			var sources = spawn.room.find(FIND_SOURCES);
@@ -32,7 +32,26 @@ var libCreeps = {
 			}
 		}
 	},
-	
+
+	manageConstructions: function(spawn) {
+		if (!spawn.room.memory.extensions)
+			spawn.room.memory.extensions = {};
+
+		var nbExtensions = spawn.room.find(FIND_MY_STRUCTURES, {
+			filter: { structureType: STRUCTURE_EXTENSION }
+		}).length;
+		if (spawn.room.controller.level > 2 && nbExtensions < 5)
+			this.createExtensions(spawn);
+	}
+
+	createExtensions: function(spawn) {
+		spawn.createConstructionSite(spawn.pos.x-1, spawn.pos.y-2, STRUCTURE_EXTENSION);
+		spawn.createConstructionSite(spawn.pos.x-2, spawn.pos.y-1, STRUCTURE_EXTENSION);
+		spawn.createConstructionSite(spawn.pos.x-2, spawn.pos.y+1, STRUCTURE_EXTENSION);
+		spawn.createConstructionSite(spawn.pos.x-1, spawn.pos.y+2, STRUCTURE_EXTENSION);
+		spawn.createConstructionSite(spawn.pos.x+1, spawn.pos.y+2, STRUCTURE_EXTENSION);
+	}
+
 	managePopulation: function(spawn) {
 		for (var r in Memory.creeps.expected) {
 			if (Memory.creeps.current[r] < Memory.creeps.expected[r] && !spawn.spawning) {
@@ -41,7 +60,7 @@ var libCreeps = {
 			}
 		}
 	},
-	
+
 	spawn: function(spawn, role) {
 		//console.log('libCreeps.spawn(' + spawn.name + ', ' + role + ')');
 		var parts = [WORK, WORK, CARRY, MOVE];
@@ -54,7 +73,7 @@ var libCreeps = {
 			}
 		}
 	},
-	
+
 	bodyPartsString: function(parts) {
 		var str = '[';
 		for (var p in parts) {
@@ -64,29 +83,29 @@ var libCreeps = {
 			else str += '?';
 		}
 		str += ']';
-		
+
 		return str;
 	},
-	
+
 	runCreeps: function() {
 		for (var c in Game.creeps)
 			this.runCreep(Game.creeps[c]);
 	},
-	
+
 	runCreep: function(creep) {
 		if (creep.ticksToLive == 1)
 			console.log(creep.name + ' the ' + creep.memory.role + ' is dying');
-		
+
 		if (creep.spawning)
 			return;
-		
+
 		if (creep.memory.role == 'harvester') this.harvesterActions(creep);
 		else if (creep.memory.role == 'carrier') this.carrierActions(creep);
 		else if (creep.memory.role == 'upgrader') this.upgraderActions(creep);
 		else if (creep.memory.role == 'builder') this.builderActions(creep);
 		else console.warn('Cannot determine which action to execute for creep ' + creep.name + ' which role is ' + creep.memory.role);
 	},
-	
+
 	carrierActions: function(creep) {
 		if (_.sum(creep.carry) < creep.carryCapacity) {
 			//console.log(creep.name + ' the carrier is searching for energy');
@@ -107,7 +126,7 @@ var libCreeps = {
 				creep.moveTo(Game.spawns[creep.memory.spawn]);
 		}
 	},
-	
+
 	harvesterActions: function(creep) {
 		if (!creep.memory.harvesting && _.sum(creep.carry) == 0) {
 			creep.memory.harvesting = true;
@@ -132,7 +151,7 @@ var libCreeps = {
 			var err = creep.harvest(destination);
 			//console.log(creep.name + ' is harvesting (' + creep.memory.source + '): ' + err);
 		}
-		
+
 		var foundCarrier = false;
 		var carriers = _.filter(Game.creeps, (c) => c.memory.role == 'carrier');
 		for (var c in carriers) {
@@ -147,7 +166,7 @@ var libCreeps = {
 			//console.log(creep.name + ' is tranferring to (' + creep.memory.destinationId + '): ' + err);
 		}
 	},
-	
+
 	upgraderActions: function(creep) {
 		if (_.sum(creep.carry) == 0) {
 			var spawn = Game.spawns[creep.memory.spawn];
@@ -160,8 +179,18 @@ var libCreeps = {
 				creep.moveTo(destination);
 		}
 	},
-	
+
 	builderActions: function(creep) {
+		if (_.sum(creep.carry) == 0) {
+			var spawn = Game.spawns[creep.memory.spawn];
+			if (spawn.transferEnergy(creep) == ERR_NOT_IN_RANGE)
+				creep.moveTo(spawn);
+		}
+		else {
+			var destination = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
+			if (creep.build(destination) == ERR_NOT_IN_RANGE)
+				creep.moveTo(destination);
+		}
 	}
 };
 

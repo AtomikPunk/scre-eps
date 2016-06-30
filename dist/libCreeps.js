@@ -22,6 +22,14 @@ var libCreeps = {
 		for (var c in creeps)
 			Memory.creeps.current[creeps[c].memory.role]++;
 
+		spawn.memory.keepenergy = false;
+		for (var r in Memory.creeps.expected) {
+			if (Memory.creeps.current[r] < Memory.creeps.expected[r]) {
+				spawn.memory.keepenergy = true;
+				break;
+			}
+		}
+
 		if (!spawn.room.memory.sources) {
 			spawn.room.memory.sources = {};
 			var sources = spawn.room.find(FIND_SOURCES);
@@ -169,12 +177,14 @@ var libCreeps = {
 	},
 
 	upgraderActions: function(creep) {
+		var spawn = Game.spawns[creep.memory.spawn];
 		if (_.sum(creep.carry) == 0) {
-			var spawn = Game.spawns[creep.memory.spawn];
-			if (spawn.transferEnergy(creep) == ERR_NOT_IN_RANGE)
-				creep.moveTo(spawn);
+			if (!spawn.memory.keepenergy) {
+				if (spawn.transferEnergy(creep) == ERR_NOT_IN_RANGE)
+					creep.moveTo(spawn);
+			}
 		}
-		else {
+		else if (!spawn.memory.keepenergy) {
 			var destination = creep.room.controller;
 			if (creep.transfer(destination, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
 				creep.moveTo(destination);
@@ -182,10 +192,12 @@ var libCreeps = {
 	},
 
 	builderActions: function(creep) {
+		var spawn = Game.spawns[creep.memory.spawn];
 		if (_.sum(creep.carry) == 0) {
-			var spawn = Game.spawns[creep.memory.spawn];
-			if (spawn.transferEnergy(creep) == ERR_NOT_IN_RANGE)
-				creep.moveTo(spawn);
+			if (!spawn.memory.keepenergy) {
+				if (spawn.transferEnergy(creep) == ERR_NOT_IN_RANGE)
+					creep.moveTo(spawn);
+			}
 		}
 		else {
 			var destination = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);

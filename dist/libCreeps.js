@@ -40,7 +40,7 @@ var libCreeps = {
 		var nbExtensions = spawn.room.find(FIND_MY_STRUCTURES, {
 			filter: { structureType: STRUCTURE_EXTENSION }
 		}).length;
-		if (spawn.room.controller.level > 2 && nbExtensions < 5)
+		if (spawn.room.controller.level >= 2 && nbExtensions < 5)
 			this.createExtensions(spawn);
 	},
 

@@ -82,15 +82,15 @@ var libCreeps = {
 	spawn: function(spawn, role) {
 		//console.log('libCreeps.spawn(' + spawn.name + ', ' + role + ')');
 		var parts;
-		if (spawn.room.memory.extensions.length < 5) {
+		if (Object.keys(spawn.room.memory.extensions).length < 5) {
 			if (role == 'carrier')
 				parts = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
 			else
 				parts = [WORK, WORK, CARRY, MOVE];
 		}
-		if (spawn.room.memory.extensions.length >= 5) {
+		else if (Object.keys(spawn.room.memory.extensions).length >= 5) {
 			if (role == 'carrier')
-				parts = [THOUGH, THOUGH, THOUGH, THOUGH, THOUGH, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+				parts = [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
 			else if (role == 'harvester')
 				parts = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
 			else

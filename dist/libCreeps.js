@@ -142,7 +142,12 @@ var libCreeps = {
 	},
 
 	carrierActions: function(creep) {
-		if (_.sum(creep.carry) < creep.carryCapacity) {
+		if (!creep.memory.harvesting && _.sum(creep.carry) == 0)
+			creep.memory.harvesting = true;
+		else if (creep.memory.harvesting && _.sum(creep.carry) >= creep.carryCapacity)
+			creep.memory.harvesting = false;
+
+		if (creep.memory.harvesting) {
 			//console.log(creep.name + ' the carrier is searching for energy');
 			var destination = creep.pos.findClosestByPath(FIND_DROPPED_ENERGY);
 			if (destination) {
@@ -174,6 +179,9 @@ var libCreeps = {
 					if (creep.transfer(nonFullExtension, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
 						creep.moveTo(nonFullExtension);
 				}
+				else if (_.sum(creep.carry) < creep.carryCapacity)
+					// No more space left in any spawn or extension... Let's return to harvesting...
+					creep.memory.harvesting = true;
 			}
 		}
 	},

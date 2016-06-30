@@ -42,7 +42,7 @@ var libCreeps = {
 		}).length;
 		if (spawn.room.controller.level > 2 && nbExtensions < 5)
 			this.createExtensions(spawn);
-	}
+	},
 
 	createExtensions: function(spawn) {
 		spawn.createConstructionSite(spawn.pos.x-1, spawn.pos.y-2, STRUCTURE_EXTENSION);
@@ -50,7 +50,7 @@ var libCreeps = {
 		spawn.createConstructionSite(spawn.pos.x-2, spawn.pos.y+1, STRUCTURE_EXTENSION);
 		spawn.createConstructionSite(spawn.pos.x-1, spawn.pos.y+2, STRUCTURE_EXTENSION);
 		spawn.createConstructionSite(spawn.pos.x+1, spawn.pos.y+2, STRUCTURE_EXTENSION);
-	}
+	},
 
 	managePopulation: function(spawn) {
 		for (var r in Memory.creeps.expected) {

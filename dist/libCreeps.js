@@ -30,7 +30,7 @@ var libCreeps = {
 			}
 		}
 
-		if (this.allocate(spawn.room.memory, 'sources') {
+		if (this.allocate(spawn.room.memory, 'sources')) {
 			var sources = spawn.room.find(FIND_SOURCES);
 			for (var s in sources) {
 				this.allocate(spawn.room.memory.sources, s);
@@ -45,7 +45,7 @@ var libCreeps = {
 		});
 		for (var e in extensions) {
 			this.allocate(spawn.room.memory.extensions, e);
-			spawn.room.memory.extensions.e.id = extensions[e].id;
+			spawn.room.memory.extensions[e].id = extensions[e].id;
 		}
 	},
 
@@ -149,7 +149,7 @@ var libCreeps = {
 				for (var e in creep.room.memory.extensions) {
 					extensions.push(Game.getObjectById(creep.room.memory.extensions.e.id));
 				}
-				var nonFullExtension = _.find(extensions, function(e) { return _.sum(e.carry) < e.carryCapacity });
+				var nonFullExtension = _.find(extensions, (e) => _.sum(e.carry) < e.carryCapacity );
 				if (nonFullExtension && creep.moveTo(nonFullExtension) == ERR_NOT_IN_RANGE)
 					creep.moveTo(nonFullExtension);
 			}

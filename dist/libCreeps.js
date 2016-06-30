@@ -110,6 +110,11 @@ var libCreeps = {
 			if (parts[p] == WORK) str += 'w';
 			else if (parts[p] == CARRY) str += 'c';
 			else if (parts[p] == MOVE) str += 'm';
+			else if (parts[p] == TOUGH) str += 't';
+			else if (parts[p] == ATTACK) str += 'a';
+			else if (parts[p] == RANGED_ATTACK) str += 'r';
+			else if (parts[p] == HEAL) str += 'h';
+			else if (parts[p] == CLAIM) str += 'l';
 			else str += '?';
 		}
 		str += ']';

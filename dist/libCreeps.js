@@ -116,9 +116,10 @@ var libCreeps = {
 					creep.moveTo(destination);
 			}
 			else {
-				destination = creep.pos.findClosestByRange(FIND_SOURCES);
-				if (!creep.pos.inRangeTo(destination, 2))
-					creep.moveTo(destination);
+				destination = creep.pos.findClosestByPath(FIND_MY_CREEPS, {
+					filter: { memory.role == 'harvester' && _.sum(carry) > 0 }
+				});
+				creep.moveTo(destination);
 			}
 		}
 		else {

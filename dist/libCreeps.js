@@ -9,7 +9,7 @@ var libCreeps = {
 
 		Memory.creeps.expected = {
 			'harvester': 3,
-			'carrier': 2,
+			'carrier': 3,
 			'upgrader': 2,
 			'builder': 2
 		};
@@ -30,25 +30,35 @@ var libCreeps = {
 			}
 		}
 
-		if (!spawn.room.memory.sources) {
-			spawn.room.memory.sources = {};
+		if (this.allocate(spawn.room.memory, 'sources') {
 			var sources = spawn.room.find(FIND_SOURCES);
 			for (var s in sources) {
-				spawn.room.memory.sources[s] = {};
-				spawn.room.memory.sources[s].id = sources[s].id;
-				spawn.room.memory.sources[s].pos = sources[s].pos;
+				this.allocate(spawn.room.memory.sources, s);
+				spawn.room.memory.sources.s.id = sources[s].id;
+				spawn.room.memory.sources.s.pos = sources[s].pos;
 			}
+		}
+
+		this.allocate(spawn.room.memory, 'extensions');
+		var extensions = spawn.room.find(FIND_MY_STRUCTURES, {
+			filter: { structureType: STRUCTURE_EXTENSION }
+		});
+		for (var e in extensions) {
+			this.allocate(spawn.room.memory.extensions, e);
+			spawn.room.memory.extensions.e.id = extensions[e].id;
 		}
 	},
 
-	manageConstructions: function(spawn) {
-		if (!spawn.room.memory.extensions)
-			spawn.room.memory.extensions = {};
+	allocate: function(parentMemory, fieldName) {
+		if (!parentMemory[fieldName]) {
+			parentMemory[fieldName] = {};
+			return true;
+		}
+		return false;
+	},
 
-		var nbExtensions = spawn.room.find(FIND_MY_STRUCTURES, {
-			filter: { structureType: STRUCTURE_EXTENSION }
-		}).length;
-		if (spawn.room.controller.level >= 2 && nbExtensions < 5)
+	manageConstructions: function(spawn) {
+		if (spawn.room.controller.level >= 2 && spawn.room.memory.extensions.length < 5)
 			this.createExtensions(spawn);
 	},
 
@@ -131,8 +141,18 @@ var libCreeps = {
 			}
 		}
 		else {
-			if (creep.transfer(Game.spawns[creep.memory.spawn], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
+			var err = creep.transfer(Game.spawns[creep.memory.spawn], RESOURCE_ENERGY);
+			if (err == ERR_NOT_IN_RANGE)
 				creep.moveTo(Game.spawns[creep.memory.spawn]);
+			else if (err == ERR_FULL) {
+				var extensions;
+				for (var e in creep.room.memory.extensions) {
+					extensions.push(Game.getObjectById(creep.room.memory.extensions.e.id));
+				}
+				var nonFullExtension = _.find(extensions, function(e) { return _.sum(e.carry) < e.carryCapacity });
+				if (nonFullExtension && creep.moveTo(nonFullExtension) == ERR_NOT_IN_RANGE)
+					creep.moveTo(nonFullExtension);
+			}
 		}
 	},
 

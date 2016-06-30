@@ -117,7 +117,7 @@ var libCreeps = {
 			}
 			else {
 				destination = creep.pos.findClosestByPath(FIND_MY_CREEPS, {
-					filter: { (c) => c.memory.role == 'harvester' && _.sum(c.carry) > 0 }
+					filter: function(c) { return c.memory.role == 'harvester' && _.sum(c.carry) > 0 }
 				});
 				creep.moveTo(destination);
 			}

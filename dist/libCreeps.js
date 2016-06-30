@@ -81,9 +81,21 @@ var libCreeps = {
 
 	spawn: function(spawn, role) {
 		//console.log('libCreeps.spawn(' + spawn.name + ', ' + role + ')');
-		var parts = [WORK, WORK, CARRY, MOVE];
-		if (role == 'carrier')
-			parts = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+		var parts;
+		if (spawn.room.memory.extensions.length < 5) {
+			if (role == 'carrier')
+				parts = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+			else
+				parts = [WORK, WORK, CARRY, MOVE];
+		}
+		if (spawn.room.memory.extensions.length >= 5) {
+			if (role == 'carrier')
+				parts = [THOUGH, THOUGH, THOUGH, THOUGH, THOUGH, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+			else if (role == 'harvester')
+				parts = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
+			else
+				parts = [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+		}
 		if (spawn.canCreateCreep(parts) == 0) {
 			var name = spawn.createCreep(parts, null, { role: role, spawn: spawn.name });
 			if (_.isString(name)) {
@@ -145,13 +157,18 @@ var libCreeps = {
 			if (err == ERR_NOT_IN_RANGE)
 				creep.moveTo(Game.spawns[creep.memory.spawn]);
 			else if (err == ERR_FULL) {
-				var extensions;
+				var nonFullExtension;
 				for (var e in creep.room.memory.extensions) {
-					extensions.push(Game.getObjectById(creep.room.memory.extensions.e.id));
+					var ext = Game.getObjectById(creep.room.memory.extensions[e].id);
+					if (ext.energy < e.energyCapacity) {
+						nonFullExtension = ext;
+						break;
+					}
 				}
-				var nonFullExtension = _.find(extensions, (e) => _.sum(e.carry) < e.carryCapacity );
-				if (nonFullExtension && creep.moveTo(nonFullExtension) == ERR_NOT_IN_RANGE)
-					creep.moveTo(nonFullExtension);
+				if (nonFullExtension) {
+					if (creep.transfer(nonFullExtension, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
+						creep.moveTo(nonFullExtension);
+				}
 			}
 		}
 	},

@@ -7,29 +7,6 @@ var libCreeps = {
 			}
 		}
 
-		Memory.creeps.expected = {
-			'harvester': 3,
-			'carrier': 3,
-			'upgrader': 2,
-			'builder': 2
-		};
-
-		if (!Memory.creeps.current)
-			Memory.creeps.current = {};
-		for (var r in Memory.creeps.expected)
-			Memory.creeps.current[r] = 0;
-		var creeps = _.filter(Game.creeps, (c) => c.room == spawn.room);
-		for (var c in creeps)
-			Memory.creeps.current[creeps[c].memory.role]++;
-
-		spawn.memory.keepenergy = false;
-		for (var r in Memory.creeps.expected) {
-			if (Memory.creeps.current[r] < Memory.creeps.expected[r]) {
-				spawn.memory.keepenergy = true;
-				break;
-			}
-		}
-
 		if (this.allocate(spawn.room.memory, 'sources')) {
 			var sources = spawn.room.find(FIND_SOURCES);
 			for (var s in sources) {
@@ -46,6 +23,44 @@ var libCreeps = {
 		for (var e in extensions) {
 			this.allocate(spawn.room.memory.extensions, e);
 			spawn.room.memory.extensions[e].id = extensions[e].id;
+		}
+
+		if (extensions.length < 5)
+			spawn.room.memory.phase = 1;
+		else if (extensions.length >= 5)
+			spawn.room.memory.phase = 2;
+
+		if (spawn.room.memory.phase == 1) {
+			Memory.creeps.expected = {
+				'harvester': 3,
+				'carrier': 3,
+				'upgrader': 2,
+				'builder': 2
+			};
+		}
+		else if (spawn.room.memory.phase == 2) {
+			Memory.creeps.expected = {
+				'harvester': 3,
+				'carrier': 4,
+				'upgrader': 4,
+				'builder': 2
+			};
+		}
+
+		if (!Memory.creeps.current)
+			Memory.creeps.current = {};
+		for (var r in Memory.creeps.expected)
+			Memory.creeps.current[r] = 0;
+		var creeps = _.filter(Game.creeps, (c) => c.room == spawn.room);
+		for (var c in creeps)
+			Memory.creeps.current[creeps[c].memory.role]++;
+
+		spawn.memory.keepenergy = false;
+		for (var r in Memory.creeps.expected) {
+			if (Memory.creeps.current[r] < Memory.creeps.expected[r]) {
+				spawn.memory.keepenergy = true;
+				break;
+			}
 		}
 	},
 
@@ -82,19 +97,19 @@ var libCreeps = {
 	spawn: function(spawn, role) {
 		//console.log('libCreeps.spawn(' + spawn.name + ', ' + role + ')');
 		var parts;
-		if (Object.keys(spawn.room.memory.extensions).length < 5) {
+		if (spawn.room.memory.phase == 1) {
 			if (role == 'carrier')
 				parts = [CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
 			else
 				parts = [WORK, WORK, CARRY, MOVE];
 		}
-		else if (Object.keys(spawn.room.memory.extensions).length >= 5) {
+		else if (spawn.room.memory.phase == 2) {
 			if (role == 'carrier')
-				parts = [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+				parts = [CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
 			else if (role == 'harvester')
 				parts = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
 			else
-				parts = [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
+				parts = [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE];
 		}
 		if (spawn.canCreateCreep(parts) == 0) {
 			var name = spawn.createCreep(parts, null, { role: role, spawn: spawn.name });

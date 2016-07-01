@@ -73,7 +73,10 @@ var libCreeps = {
 	},
 
 	manageConstructions: function(spawn) {
-		if (spawn.room.controller.level >= 2 && spawn.room.memory.extensions.length < 5)
+		var nb = 0;
+		for (var e in spawn.room.memory.extensions)
+			nb++;
+		if (spawn.room.controller.level >= 2 && nb < 5)
 			this.createExtensions(spawn);
 	},
 

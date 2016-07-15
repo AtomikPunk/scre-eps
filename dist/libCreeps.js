@@ -1,8 +1,8 @@
 var libCreeps = {
-
-	updateMemory: function(spawn) {
-		for(var name in Memory.creeps) {
-			if(!Game.creeps[name]) {
+	/** @param {Spawn} spawn */
+	updateMemory: function (spawn) {
+		for (var name in Memory.creeps) {
+			if (!Game.creeps[name]) {
 				delete Memory.creeps[name];
 			}
 		}
@@ -11,8 +11,17 @@ var libCreeps = {
 			var sources = spawn.room.find(FIND_SOURCES);
 			for (var s in sources) {
 				this.allocate(spawn.room.memory.sources, s);
-				spawn.room.memory.sources.s.id = sources[s].id;
-				spawn.room.memory.sources.s.pos = sources[s].pos;
+				spawn.room.memory.sources[s].id = sources[s].id;
+				spawn.room.memory.sources[s].pos = sources[s].pos;
+				this.allocate(spawn.room.memory.sources[s], 'spots');
+				var surroundings = spawn.room.lookAtArea(sources[s].pos.y - 1, sources[s].pos.x - 1, sources[s].pos.y + 1, sources[s].pos.x + 1, true);
+				for (let u in surroundings) {
+					let spot = surroundings[u];
+					if (spot.terrain && spot.terrain != 'wall') {
+						this.allocate(spawn.room.memory.sources[s].spots, u);
+						spawn.room.memory.sources[s].spots[u].pos = new RoomPosition(spot.x, spot.y, spawn.room.name);
+					}
+				}
 			}
 		}
 
@@ -64,7 +73,9 @@ var libCreeps = {
 		}
 	},
 
-	allocate: function(parentMemory, fieldName) {
+	/** @param {Memory} parentMemory
+		@param {string} fieldName */
+	allocate: function (parentMemory, fieldName) {
 		if (!parentMemory[fieldName]) {
 			parentMemory[fieldName] = {};
 			return true;
@@ -72,7 +83,8 @@ var libCreeps = {
 		return false;
 	},
 
-	manageConstructions: function(spawn) {
+	/** @param {Spawn} spawn */
+	manageConstructions: function (spawn) {
 		var nb = 0;
 		for (var e in spawn.room.memory.extensions)
 			nb++;
@@ -80,15 +92,17 @@ var libCreeps = {
 			this.createExtensions(spawn);
 	},
 
-	createExtensions: function(spawn) {
-		spawn.room.createConstructionSite(spawn.pos.x-1, spawn.pos.y-2, STRUCTURE_EXTENSION);
-		spawn.room.createConstructionSite(spawn.pos.x-2, spawn.pos.y-1, STRUCTURE_EXTENSION);
-		spawn.room.createConstructionSite(spawn.pos.x-2, spawn.pos.y+1, STRUCTURE_EXTENSION);
-		spawn.room.createConstructionSite(spawn.pos.x-1, spawn.pos.y+2, STRUCTURE_EXTENSION);
-		spawn.room.createConstructionSite(spawn.pos.x+1, spawn.pos.y+2, STRUCTURE_EXTENSION);
+	/** @param {Spawn} spawn */
+	createExtensions: function (spawn) {
+		spawn.room.createConstructionSite(spawn.pos.x - 1, spawn.pos.y - 2, STRUCTURE_EXTENSION);
+		spawn.room.createConstructionSite(spawn.pos.x - 2, spawn.pos.y - 1, STRUCTURE_EXTENSION);
+		spawn.room.createConstructionSite(spawn.pos.x - 2, spawn.pos.y + 1, STRUCTURE_EXTENSION);
+		spawn.room.createConstructionSite(spawn.pos.x - 1, spawn.pos.y + 2, STRUCTURE_EXTENSION);
+		spawn.room.createConstructionSite(spawn.pos.x + 1, spawn.pos.y + 2, STRUCTURE_EXTENSION);
 	},
 
-	managePopulation: function(spawn) {
+	/** @param {Spawn} spawn */
+	managePopulation: function (spawn) {
 		for (var r in Memory.creeps.expected) {
 			if (Memory.creeps.current[r] < Memory.creeps.expected[r] && !spawn.spawning) {
 				this.spawn(spawn, r);
@@ -97,7 +111,9 @@ var libCreeps = {
 		}
 	},
 
-	spawn: function(spawn, role) {
+	/** @param {Spawn} spawn
+		@param {string} role */
+	spawn: function (spawn, role) {
 		//console.log('libCreeps.spawn(' + spawn.name + ', ' + role + ')');
 		var parts;
 		if (spawn.room.memory.phase == 1) {
@@ -122,7 +138,8 @@ var libCreeps = {
 		}
 	},
 
-	bodyPartsString: function(parts) {
+	/** @param {Array<string>} parts */
+	bodyPartsString: function (parts) {
 		var str = '[';
 		for (var p in parts) {
 			if (parts[p] == WORK) str += 'w';
@@ -140,12 +157,13 @@ var libCreeps = {
 		return str;
 	},
 
-	runCreeps: function() {
+	runCreeps: function () {
 		for (var c in Game.creeps)
 			this.runCreep(Game.creeps[c]);
 	},
 
-	runCreep: function(creep) {
+	/** @param {Creep} creep */
+	runCreep: function (creep) {
 		if (creep.ticksToLive == 1)
 			console.log(creep.name + ' the ' + creep.memory.role + ' is dying');
 
@@ -156,10 +174,11 @@ var libCreeps = {
 		else if (creep.memory.role == 'carrier') this.carrierActions(creep);
 		else if (creep.memory.role == 'upgrader') this.upgraderActions(creep);
 		else if (creep.memory.role == 'builder') this.builderActions(creep);
-		else console.warn('Cannot determine which action to execute for creep ' + creep.name + ' which role is ' + creep.memory.role);
+		else console.log('Cannot determine which action to execute for creep ' + creep.name + ' which role is ' + creep.memory.role);
 	},
 
-	carrierActions: function(creep) {
+	/** @param {Creep} creep */
+	carrierActions: function (creep) {
 		if (!creep.memory.harvesting && _.sum(creep.carry) == 0)
 			creep.memory.harvesting = true;
 		else if (creep.memory.harvesting && _.sum(creep.carry) >= creep.carryCapacity)
@@ -175,7 +194,7 @@ var libCreeps = {
 			}
 			else {
 				destination = creep.pos.findClosestByPath(FIND_MY_CREEPS, {
-					filter: function(c) { return c.memory.role == 'harvester' && _.sum(c.carry) > 0 }
+					filter: function (c) { return c.memory.role == 'harvester' && _.sum(c.carry) > 0 }
 				});
 				creep.moveTo(destination);
 			}
@@ -204,7 +223,8 @@ var libCreeps = {
 		}
 	},
 
-	harvesterActions: function(creep) {
+	/** @param {Creep} creep */
+	harvesterActions: function (creep) {
 		if (!creep.memory.harvesting && _.sum(creep.carry) == 0) {
 			creep.memory.harvesting = true;
 			var destination = creep.pos.findClosestByPath(FIND_SOURCES);
@@ -244,7 +264,8 @@ var libCreeps = {
 		}
 	},
 
-	upgraderActions: function(creep) {
+	/** @param {Creep} creep */
+	upgraderActions: function (creep) {
 		var spawn = Game.spawns[creep.memory.spawn];
 		if (_.sum(creep.carry) == 0) {
 			if (!spawn.memory.keepenergy) {
@@ -259,7 +280,8 @@ var libCreeps = {
 		}
 	},
 
-	builderActions: function(creep) {
+	/** @param {Creep} creep */
+	builderActions: function (creep) {
 		var spawn = Game.spawns[creep.memory.spawn];
 		if (_.sum(creep.carry) == 0) {
 			if (!spawn.memory.keepenergy) {
